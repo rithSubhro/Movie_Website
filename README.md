@@ -10,5 +10,5 @@ after that api information will load, and then go to create option of api
 create your api, give all the required details and then copy your api key
 Go to script.js file and paste the value of the key in the API_KEY variable.
 
-The working demo of the website can be found here:
-https://youtu.be/fGVlT24SNQI
+The working demo of the website can be found here:https://movie-website-js.herokuapp.com/
+
