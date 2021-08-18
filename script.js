@@ -112,7 +112,7 @@ const selectedGenre = []
 
 //This function is for selecting the genres in the website, also if the genre is clicked the 2nd time or even no of times, it should get removed from the array
 function setGenre(){
-    tagsEl.innerHTML = '';
+    tagsEl.innerHTML = '';      //for deleting everything previously in the tags section
     genres.forEach(genre =>{
         const t= document.createElement('div');
         t.classList.add("tag");
@@ -226,9 +226,13 @@ function showMovies(data) {
 
     main.innerHTML = ``;
     data.forEach(movie => {
-        const{title,poster_path, vote_average, overview} = movie;
+        const{title,poster_path, vote_average, overview, id} = movie;
         const movieEl= document.createElement('div');
         movieEl.classList.add("movie");
+
+        //This below code takes the poster from the poster path and adds and adds that to image url and also if the poster path is not found, a404 not found image is posted in place of that
+        //The getcolor function is called and according to the vote average the color is given to the rating.
+        //Also the overview is added to the class list, extracted in the variable overview.
         movieEl.innerHTML = `
         <img src="${poster_path?IMG_URL + poster_path : "https://previews.123rf.com/images/kaymosk/kaymosk1804/kaymosk180400005/99776312-error-404-page-not-found-error-with-glitch-effect-on-screen-vector-illustration-for-your-design.jpg"}" alt="${title}">
 
@@ -241,13 +245,99 @@ function showMovies(data) {
         <div class="overview">
             <h1>Overview</h1>
             ${overview}
+            </br>
+            <button class="know_more" id="${id}">Know More</button>
         </div>
         `
 
         main.appendChild(movieEl);
+
+        document.getElementById(id).addEventListener('click',()=>{
+            openNav(movie);
+        })
     });
 }
 
+
+const overlayContent = document.getElementById('overlay_content');
+/* Open when someone clicks on the span element */
+function openNav(movie) {
+    let id=movie.id;
+    fetch(BASE_URL + '/movie/'+ id +'/videos?api_key=' + API_KEY +'&language=en-US').then(res =>res.json()).then(videoData => {
+        console.log(videoData);
+        if(videoData){
+            document.getElementById("myNav").style.width = "100%";
+            if(videoData.results.length>0){
+                var embed = [];
+                var dots = [];
+                videoData.results.forEach(video =>{
+                    let {name,key,site} = video;
+                    if(site == 'YouTube'){
+                        embed.push(
+                            `<iframe width="560" height="315" src="https://www.youtube.com/embed/${key}" title="${name}" class=
+                            "embed hide" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`)
+                    }
+                })
+
+                overlayContent.innerHTML = embed.join('');
+                activeSlide=0;
+                showVideos();
+
+            }else{
+                overlayContent.innerHTML = '<h1 class="no_results">No Results Found !!</h1>'
+            }
+        }
+    })
+
+  }
+  
+  /* Close when someone clicks on the "x" symbol inside the overlay */
+  function closeNav() {
+    document.getElementById("myNav").style.width = "0%";
+  }
+  var activeSlide = 0;
+  var totalVideos=0;
+  function showVideos(){
+      let embedClasses = document.querySelectorAll('.embed');
+      totalVideos = embedClasses.length;
+      embedClasses.forEach((embedTag, idx) => {
+        if(activeSlide == idx){
+            embedTag.classList.add('show');
+            embedTag.classList.remove('hide');
+        }
+        else{
+            embedTag.classList.add('hide');
+            embedTag.classList.remove('show');
+        }
+      })
+  }
+
+  const leftArrow = document.getElementById('left_arrow');
+  const rightArrow = document.getElementById('right_arrow');
+
+
+  leftArrow.addEventListener('click' , ()=> {
+      if(activeSlide>0){
+          activeSlide--;
+      }
+      else{
+        activeSlide = totalVideos-1;
+      }
+
+      showVideos();
+  })
+
+  rightArrow.addEventListener('click' , ()=> {
+    if(activeSlide<(totalVideos-1)){
+        activeSlide++;
+    }
+    else{
+      activeSlide = 0;
+    }
+
+    showVideos();
+})
+//This function changes the color of the vote according to the given conditions
 function getcolor(vote) {
     if(vote>=8){
         return "green";
@@ -260,6 +350,8 @@ function getcolor(vote) {
     }
   }
 
+
+  //Below eventlistener is for when the user presses search button in the search bar,
   form.addEventListener('submit' , (e) =>{
       e.preventDefault();
 
